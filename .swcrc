@@ -21,19 +21,19 @@
     "baseUrl": "src",
     "paths": {
       "@scheduler/*": ["*"],
-      "@backend/*": ["../../Blutor-Backend/dist/*"],
-      "@config": ["../../Blutor-Backend/dist/config"],
-      "@databases": ["../../Blutor-Backend/dist/databases"],
-      "@interfaces/*": ["../../Blutor-Backend/dist/interfaces/*"],
-      "@models/*": ["../../Blutor-Backend/dist/models/*"],
-      "@services/*": ["../../Blutor-Backend/dist/services/*"],
-      "@utils/*": ["../../Blutor-Backend/dist/utils/*"],
-      "@constants/*": ["../../Blutor-Backend/dist/constants/*"],
-      "@responses/*": ["../../Blutor-Backend/dist/responses/*"],
-      "@abstracts/*": ["../../Blutor-Backend/dist/abstracts/*"],
-      "@dtos/*": ["../../Blutor-Backend/dist/dtos/*"],
-      "@customTypes/*": ["../../Blutor-Backend/dist/customTypes/*"],
-      "@/*": ["../../Blutor-Backend/dist/*"]
+      "@backend/*": ["../../blutor-backend/dist/*"],
+      "@config": ["../../blutor-backend/dist/config"],
+      "@databases": ["../../blutor-backend/dist/databases"],
+      "@interfaces/*": ["../../blutor-backend/dist/interfaces/*"],
+      "@models/*": ["../../blutor-backend/dist/models/*"],
+      "@services/*": ["../../blutor-backend/dist/services/*"],
+      "@utils/*": ["../../blutor-backend/dist/utils/*"],
+      "@constants/*": ["../../blutor-backend/dist/constants/*"],
+      "@responses/*": ["../../blutor-backend/dist/responses/*"],
+      "@abstracts/*": ["../../blutor-backend/dist/abstracts/*"],
+      "@dtos/*": ["../../blutor-backend/dist/dtos/*"],
+      "@customTypes/*": ["../../blutor-backend/dist/customTypes/*"],
+      "@/*": ["../../blutor-backend/dist/*"]
     }
   },
   "module": {
