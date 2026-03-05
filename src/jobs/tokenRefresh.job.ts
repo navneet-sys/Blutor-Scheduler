@@ -1,11 +1,11 @@
 import TokenRefreshService from '@services/tokenRefresh.service';
 import { logger } from '../lib/logger';
 
-export async function runTokenRefresh(): Promise<void> {
+export async function runTokenRefresh(): Promise<string> {
   const service = new TokenRefreshService();
   const results = await service.refreshAllExpiringTokens();
 
-  logger.info(
-    `Token refresh results: ${results.success} refreshed, ${results.failed} failed`,
-  );
+  const summary = `${results.success} refreshed, ${results.failed} failed`;
+  logger.info(`Token refresh results: ${summary}`);
+  return summary;
 }

@@ -22,12 +22,12 @@ const DUMMY_USER = {} as PlatformUserDto;
  * Main entry point: refresh all creator data for a given platform type.
  * Called on a staggered schedule (Instagram at 1 AM, YouTube at 2 AM, etc.)
  */
-export async function runCreatorDataRefresh(platformType: PlatformType): Promise<void> {
+export async function runCreatorDataRefresh(platformType: PlatformType): Promise<string> {
   const platforms = await platformModel.find({ type: platformType }).lean();
 
   if (platforms.length === 0) {
     logger.info(`No ${platformType} platforms found, skipping refresh`);
-    return;
+    return `${platformType}: 0 platforms found`;
   }
 
   logger.info(`Starting ${platformType} creator data refresh for ${platforms.length} platforms`);
@@ -60,9 +60,9 @@ export async function runCreatorDataRefresh(platformType: PlatformType): Promise
     }
   }
 
-  logger.info(
-    `${platformType} refresh complete: ${refreshed} refreshed, ${skipped} skipped (fresh), ${failed} failed`,
-  );
+  const summary = `${platformType}: ${refreshed} refreshed, ${skipped} skipped (fresh), ${failed} failed`;
+  logger.info(`${platformType} refresh complete: ${summary}`);
+  return summary;
 }
 
 /**

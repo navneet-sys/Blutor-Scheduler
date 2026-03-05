@@ -1,16 +1,26 @@
 import cron from 'node-cron';
+import moment from 'moment-timezone';
 import { acquireLock, releaseLock } from './lock';
 import { logger } from './logger';
+import { sendTelegramMessage } from './telegram';
 import { SCHEDULER_CONFIG } from '../config';
 
 interface JobDefinition {
   name: string;
   schedule: string;
-  handler: () => Promise<void>;
+  handler: () => Promise<string | void>;
   lockTtlHours?: number;
 }
 
 const registeredJobs: cron.ScheduledTask[] = [];
+
+function formatDuration(ms: number): string {
+  const totalSec = ms / 1000;
+  if (totalSec < 60) return `${totalSec.toFixed(1)}s`;
+  const min = Math.floor(totalSec / 60);
+  const sec = (totalSec % 60).toFixed(0);
+  return `${min}m ${sec}s`;
+}
 
 /**
  * Register a cron job with automatic distributed locking.
@@ -39,12 +49,40 @@ export function registerJob(job: JobDefinition): void {
 
       const startTime = Date.now();
       try {
-        await handler();
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        logger.info(`Job "${name}" completed in ${elapsed}s`);
+        const summary = await handler();
+        const elapsed = Date.now() - startTime;
+        const duration = formatDuration(elapsed);
+        logger.info(`Job "${name}" completed in ${duration}`);
+
+        const timestamp = moment().tz(SCHEDULER_CONFIG.TIMEZONE).format('YYYY-MM-DD HH:mm:ss');
+        const lines = [
+          `Blutor Scheduler -- Job Completed`,
+          ``,
+          `Job: ${name}`,
+          `Status: Success`,
+          `Duration: ${duration}`,
+        ];
+        if (summary) lines.push(`Summary: ${summary}`);
+        lines.push(`Time: ${timestamp} IST`);
+
+        await sendTelegramMessage(lines.join('\n'));
       } catch (error: any) {
-        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-        logger.error(`Job "${name}" failed after ${elapsed}s: ${error.message}`);
+        const elapsed = Date.now() - startTime;
+        const duration = formatDuration(elapsed);
+        logger.error(`Job "${name}" failed after ${duration}: ${error.message}`);
+
+        const timestamp = moment().tz(SCHEDULER_CONFIG.TIMEZONE).format('YYYY-MM-DD HH:mm:ss');
+        await sendTelegramMessage(
+          [
+            `Blutor Scheduler -- Job Failed`,
+            ``,
+            `Job: ${name}`,
+            `Status: Failed`,
+            `Duration: ${duration}`,
+            `Error: ${error.message}`,
+            `Time: ${timestamp} IST`,
+          ].join('\n'),
+        );
       } finally {
         await releaseLock(lockName);
       }
