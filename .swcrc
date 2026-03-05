@@ -1,0 +1,42 @@
+{
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "tsx": false,
+      "dynamicImport": true,
+      "decorators": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "target": "es2017",
+    "externalHelpers": false,
+    "keepClassNames": true,
+    "loose": false,
+    "minify": {
+      "compress": false,
+      "mangle": false
+    },
+    "baseUrl": "src",
+    "paths": {
+      "@scheduler/*": ["*"],
+      "@backend/*": ["../../Blutor-Backend/dist/*"],
+      "@config": ["../../Blutor-Backend/dist/config"],
+      "@databases": ["../../Blutor-Backend/dist/databases"],
+      "@interfaces/*": ["../../Blutor-Backend/dist/interfaces/*"],
+      "@models/*": ["../../Blutor-Backend/dist/models/*"],
+      "@services/*": ["../../Blutor-Backend/dist/services/*"],
+      "@utils/*": ["../../Blutor-Backend/dist/utils/*"],
+      "@constants/*": ["../../Blutor-Backend/dist/constants/*"],
+      "@responses/*": ["../../Blutor-Backend/dist/responses/*"],
+      "@abstracts/*": ["../../Blutor-Backend/dist/abstracts/*"],
+      "@dtos/*": ["../../Blutor-Backend/dist/dtos/*"],
+      "@customTypes/*": ["../../Blutor-Backend/dist/customTypes/*"],
+      "@/*": ["../../Blutor-Backend/dist/*"]
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}
