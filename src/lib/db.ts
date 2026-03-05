@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import path from 'path';
 import {
   DB_URL,
   DB_DATABASE,
@@ -10,6 +10,11 @@ import {
   MONGODB_ATLAS_CLUSTER,
 } from '../config';
 import { logger } from './logger';
+
+// Backend models resolve `require('mongoose')` from blutor-backend/node_modules/.
+// We must connect that same mongoose instance so imported models share the DB connection.
+const backendRoot = path.resolve(__dirname, '../../../blutor-backend');
+const mongoose = require(require.resolve('mongoose', { paths: [backendRoot] }));
 
 const buildAtlasUri = (): string | null => {
   if (MONGODB_ATLAS_URI) return MONGODB_ATLAS_URI;
