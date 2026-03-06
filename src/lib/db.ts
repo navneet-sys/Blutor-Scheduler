@@ -13,8 +13,11 @@ import { logger } from './logger';
 
 // Backend models resolve `require('mongoose')` from blutor-backend/node_modules/.
 // We must connect that same mongoose instance so imported models share the DB connection.
+// ALL scheduler code that needs mongoose (including lock.ts) MUST use this export.
 const backendRoot = path.resolve(__dirname, '../../../blutor-backend');
 const mongoose = require(require.resolve('mongoose', { paths: [backendRoot] }));
+
+export { mongoose };
 
 const buildAtlasUri = (): string | null => {
   if (MONGODB_ATLAS_URI) return MONGODB_ATLAS_URI;

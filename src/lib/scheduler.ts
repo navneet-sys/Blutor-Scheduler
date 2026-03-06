@@ -41,7 +41,24 @@ export function registerJob(job: JobDefinition): void {
       const lockName = `job:${name}`;
       logger.info(`Job "${name}" triggered by schedule`);
 
-      const lock = await acquireLock(lockName, lockTtlHours);
+      let lock: string | null;
+      try {
+        lock = await acquireLock(lockName, lockTtlHours);
+      } catch (lockError: any) {
+        logger.error(`Job "${name}" lock error: ${lockError.message}`);
+        const timestamp = moment().tz(SCHEDULER_CONFIG.TIMEZONE).format('YYYY-MM-DD HH:mm:ss');
+        await sendTelegramMessage(
+          [
+            `Blutor Scheduler -- Lock Error`,
+            ``,
+            `Job: ${name}`,
+            `Error: ${lockError.message}`,
+            `Time: ${timestamp} IST`,
+          ].join('\n'),
+        );
+        return;
+      }
+
       if (!lock) {
         logger.info(`Job "${name}" skipped -- lock held by another run`);
         return;

@@ -1,15 +1,17 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { mongoose } from './db';
 import os from 'os';
 import { logger } from './logger';
 
-interface ISchedulerLock extends Document {
+const { Schema } = mongoose;
+
+interface ISchedulerLock {
   _id: string;
   locked_at: Date;
   expires_at: Date;
   locked_by: string;
 }
 
-const schedulerLockSchema = new Schema<ISchedulerLock>(
+const schedulerLockSchema = new Schema(
   {
     _id: { type: String },
     locked_at: { type: Date, required: true },
@@ -19,7 +21,7 @@ const schedulerLockSchema = new Schema<ISchedulerLock>(
   { timestamps: false },
 );
 
-const SchedulerLockModel = mongoose.model<ISchedulerLock>('scheduler_lock', schedulerLockSchema);
+const SchedulerLockModel = mongoose.model('scheduler_lock', schedulerLockSchema);
 
 const IDENTITY = `${os.hostname()}:${process.pid}`;
 
@@ -56,13 +58,12 @@ export async function acquireLock(lockName: string, ttlHours: number): Promise<s
     }
     return null;
   } catch (error: any) {
-    // Duplicate key = another process grabbed it between our check and upsert
     if (error.code === 11000) {
       logger.info(`Lock busy: ${lockName} (held by another process)`);
       return null;
     }
     logger.error(`Lock acquire error for ${lockName}: ${error.message}`);
-    return null;
+    throw error;
   }
 }
 
