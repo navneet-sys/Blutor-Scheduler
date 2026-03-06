@@ -7,6 +7,7 @@
     "dev": "npm run build && cross-env NODE_ENV=development node dist/index.js",
     "build": "swc src -d dist --source-maps --copy-files",
     "start": "cross-env NODE_ENV=production node dist/index.js",
+    "job": "cross-env NODE_ENV=production node dist/run-job.js",
     "deploy:prod": "npm run build && pm2 start ecosystem.config.js --only blutor-scheduler"
   },
   "dependencies": {
