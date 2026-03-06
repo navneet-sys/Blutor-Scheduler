@@ -18,6 +18,7 @@ export const SCHEDULER_CONFIG = {
   LOCK_TTL_HOURS: 4,
   STALE_THRESHOLD_HOURS: 24,
   TIMEZONE: 'Asia/Kolkata',
+  PLATFORM_TIMEOUT_MS: 60_000,
 } as const;
 
 export const CRON_SCHEDULES = {

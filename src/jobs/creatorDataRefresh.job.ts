@@ -5,7 +5,7 @@ import { Platform, PlatformCredentials, PlatformType } from '@interfaces/platfor
 import { PlatformUserDto } from '@dtos/platforms.dto';
 import { isAnalyticsStale } from '@constants/metrics';
 import { logger } from '../lib/logger';
-import { chunk, sleep } from '../lib/utils';
+import { chunk, sleep, withTimeout } from '../lib/utils';
 import { SCHEDULER_CONFIG } from '../config';
 
 import PlatformService from '@services/platform.service';
@@ -43,7 +43,13 @@ export async function runCreatorDataRefresh(platformType: PlatformType): Promise
     logger.info(`Processing batch ${i + 1}/${batches.length} (${batch.length} platforms)`);
 
     const results = await Promise.allSettled(
-      batch.map(platform => refreshSinglePlatform(platform, platformType)),
+      batch.map(platform =>
+        withTimeout(
+          refreshSinglePlatform(platform, platformType),
+          SCHEDULER_CONFIG.PLATFORM_TIMEOUT_MS,
+          `${platformType} ${platform._id}`,
+        ),
+      ),
     );
 
     for (const result of results) {
