@@ -24,7 +24,7 @@ async function main() {
     name: 'story-fetch',
     schedule: CRON_SCHEDULES.STORY_FETCH,
     handler: runStoryFetch,
-    lockTtlHours: 1,
+    lockTtlHours: 3,
   });
 
   registerJob({

@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import moment from 'moment-timezone';
-import { acquireLock, releaseLock } from './lock';
+import { acquireLock, releaseLock, renewLock } from './lock';
 import { logger } from './logger';
 import { sendTelegramMessage } from './telegram';
 import { SCHEDULER_CONFIG } from '../config';
@@ -14,6 +14,8 @@ interface JobDefinition {
 
 const registeredJobs: cron.ScheduledTask[] = [];
 
+const HEARTBEAT_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+
 function formatDuration(ms: number): string {
   const totalSec = ms / 1000;
   if (totalSec < 60) return `${totalSec.toFixed(1)}s`;
@@ -26,6 +28,7 @@ function formatDuration(ms: number): string {
  * Register a cron job with automatic distributed locking.
  * The job acquires a MongoDB lock before execution and releases it after,
  * preventing duplicate runs across restarts or multiple instances.
+ * Long-running jobs get automatic lock renewal and heartbeat notifications.
  */
 export function registerJob(job: JobDefinition): void {
   const { name, schedule, handler, lockTtlHours = SCHEDULER_CONFIG.LOCK_TTL_HOURS } = job;
@@ -65,6 +68,32 @@ export function registerJob(job: JobDefinition): void {
       }
 
       const startTime = Date.now();
+
+      // Renew the lock at half the TTL interval so it never expires mid-run
+      const renewalMs = (lockTtlHours * 60 * 60 * 1000) / 2;
+      const renewalTimer = setInterval(async () => {
+        const renewed = await renewLock(lockName, lockTtlHours);
+        if (!renewed) {
+          logger.warn(`Job "${name}" lock renewal failed -- lock may have been lost`);
+        }
+      }, renewalMs);
+
+      // Send a heartbeat Telegram message for long-running jobs
+      const heartbeatTimer = setInterval(async () => {
+        const elapsed = Date.now() - startTime;
+        const timestamp = moment().tz(SCHEDULER_CONFIG.TIMEZONE).format('YYYY-MM-DD HH:mm:ss');
+        await sendTelegramMessage(
+          [
+            `Blutor Scheduler -- Heartbeat`,
+            ``,
+            `Job: ${name}`,
+            `Status: Still running`,
+            `Elapsed: ${formatDuration(elapsed)}`,
+            `Time: ${timestamp} IST`,
+          ].join('\n'),
+        ).catch(err => logger.error(`Heartbeat notification failed for "${name}": ${err.message}`));
+      }, HEARTBEAT_INTERVAL_MS);
+
       try {
         const summary = await handler();
         const elapsed = Date.now() - startTime;
@@ -101,6 +130,8 @@ export function registerJob(job: JobDefinition): void {
           ].join('\n'),
         );
       } finally {
+        clearInterval(renewalTimer);
+        clearInterval(heartbeatTimer);
         await releaseLock(lockName);
       }
     },

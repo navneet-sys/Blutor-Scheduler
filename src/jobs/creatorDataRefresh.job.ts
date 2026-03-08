@@ -40,7 +40,10 @@ export async function runCreatorDataRefresh(platformType: PlatformType): Promise
 
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
-    logger.info(`Processing batch ${i + 1}/${batches.length} (${batch.length} platforms)`);
+
+    if (i % 20 === 0) {
+      logger.info(`${platformType} progress: batch ${i + 1}/${batches.length}, refreshed=${refreshed}, skipped=${skipped}, failed=${failed}`);
+    }
 
     const results = await Promise.allSettled(
       batch.map(platform =>

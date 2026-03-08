@@ -80,6 +80,31 @@ export async function releaseLock(lockName: string): Promise<void> {
 }
 
 /**
+ * Extend the TTL of a lock we currently hold.
+ * Returns true if the renewal succeeded (we still own it), false otherwise.
+ */
+export async function renewLock(lockName: string, ttlHours: number): Promise<boolean> {
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + ttlHours * 60 * 60 * 1000);
+
+  try {
+    const result = await SchedulerLockModel.findOneAndUpdate(
+      { _id: lockName, locked_by: IDENTITY },
+      { $set: { expires_at: expiresAt } },
+    );
+    if (result) {
+      logger.info(`Lock renewed: ${lockName} (new expiry: ${expiresAt.toISOString()})`);
+      return true;
+    }
+    logger.warn(`Lock renewal failed: ${lockName} (not owned by us or already deleted)`);
+    return false;
+  } catch (error: any) {
+    logger.error(`Lock renewal error for ${lockName}: ${error.message}`);
+    return false;
+  }
+}
+
+/**
  * Check if a lock is currently held (by anyone).
  */
 export async function isLocked(lockName: string): Promise<boolean> {
