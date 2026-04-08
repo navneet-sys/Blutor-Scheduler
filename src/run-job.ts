@@ -9,6 +9,7 @@ import { runPermissionCheck } from './jobs/permissionCheck.job';
 import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
+import { runICMDailyReport, runICMDailyReportBackfill } from './jobs/icmDailyReport.job';
 import { PlatformType } from '@interfaces/platforms.interface';
 
 const JOBS: Record<string, () => Promise<string | void>> = {
@@ -29,6 +30,8 @@ const JOBS: Record<string, () => Promise<string | void>> = {
     }
     return results.join('\n');
   },
+  'icm-daily-report': () => runICMDailyReport(),
+  'icm-daily-report-backfill': () => runICMDailyReportBackfill(),
 };
 
 async function main() {

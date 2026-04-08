@@ -10,6 +10,7 @@ import { runPermissionCheck } from './jobs/permissionCheck.job';
 import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
+import { runICMDailyReport } from './jobs/icmDailyReport.job';
 import { PlatformType } from '@interfaces/platforms.interface';
 
 async function main() {
@@ -83,6 +84,15 @@ async function main() {
     schedule: CRON_SCHEDULES.FACEBOOK_REFRESH,
     handler: () => runCreatorDataRefresh(PlatformType.FACEBOOK),
     lockTtlHours: 4,
+  });
+
+  // --- ICM daily report (Google Sheets) ---
+
+  registerJob({
+    name: 'icm-daily-report',
+    schedule: CRON_SCHEDULES.ICM_DAILY_REPORT,
+    handler: runICMDailyReport,
+    lockTtlHours: 1,
   });
 
   startAllJobs();

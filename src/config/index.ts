@@ -10,6 +10,9 @@ export const {
   DB_URL,
   DB_DATABASE,
   LOG_DIR,
+  GOOGLE_CLIENT_EMAIL,
+  GOOGLE_PRIVATE_KEY_FOR_MAIL,
+  ICM_REPORT_SPREADSHEET_ID,
 } = process.env;
 
 export const SCHEDULER_CONFIG = {
@@ -34,4 +37,5 @@ export const CRON_SCHEDULES = {
   PERMISSION_CHECK: '0 5 * * *',             // 5 AM IST
   DELIVERABLE_TRACKING: '0 */6 * * *',       // every 6 hours
   DAU_CALCULATION: '0 0 * * *',              // midnight IST
+  ICM_DAILY_REPORT: '0 9 * * *',             // 9 AM IST daily
 } as const;
