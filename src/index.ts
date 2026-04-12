@@ -11,6 +11,7 @@ import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
 import { runICMDailyReport } from './jobs/icmDailyReport.job';
+import { runNotificationDigest } from './jobs/notificationDigest.job';
 import { PlatformType } from '@interfaces/platforms.interface';
 
 async function main() {
@@ -92,6 +93,13 @@ async function main() {
     name: 'icm-daily-report',
     schedule: CRON_SCHEDULES.ICM_DAILY_REPORT,
     handler: runICMDailyReport,
+    lockTtlHours: 1,
+  });
+
+  registerJob({
+    name: 'notification-digest',
+    schedule: CRON_SCHEDULES.NOTIFICATION_DIGEST,
+    handler: runNotificationDigest,
     lockTtlHours: 1,
   });
 
