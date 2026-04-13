@@ -20,6 +20,57 @@ function stripHtml(html: string): string {
 
 const FRONTEND = process.env.FRONTEND_URL || 'https://www.blutor.com';
 
+/**
+ * Derive a human-readable one-liner for a notification row.
+ * Falls back to the stored HTML message when available; otherwise
+ * produces copy from `type` + `username` so the digest never shows
+ * a bare "Notification" bullet.
+ */
+function digestLineForRow(r: any): { text: string; link?: string } {
+  const plain = stripHtml(r.message);
+
+  const who = r.username ? `@${r.username}` : 'Someone';
+
+  switch (r.type) {
+    case NotificationType.Profile_Viewed:
+      return { text: plain || `${who} viewed your profile`, link: r.username ? `${FRONTEND}/profile/${r.username}` : undefined };
+    case NotificationType.Started_Following:
+      return { text: plain || `${who} started following you`, link: `${FRONTEND}/connection/me/followers` };
+    case NotificationType.Connection_Request:
+      return { text: plain || `${who} sent you a connection request`, link: `${FRONTEND}/connection/me` };
+    case NotificationType.Connection_Accepted:
+      return { text: plain || `${who} accepted your connection request`, link: r.username ? `${FRONTEND}/profile/${r.username}` : undefined };
+    case NotificationType.Connection_Posted:
+      return { text: plain || `${who} shared a new post`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : (r.username ? `${FRONTEND}/profile/${r.username}` : undefined) };
+    case NotificationType.Comment_Added:
+      return { text: plain || `${who} commented on your post`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Comment_Liked:
+      return { text: plain || `${who} liked your comment`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Post_Reaction:
+      return { text: plain || `${who} liked your post`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Post_Reposted:
+      return { text: plain || `${who} reposted your post`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Mention_In_Post:
+      return { text: plain || `${who} mentioned you in a post`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Mention_In_Comment:
+      return { text: plain || `${who} mentioned you in a comment`, link: r.post_id ? `${FRONTEND}/post/${r.post_id}` : undefined };
+    case NotificationType.Ticket_Resolved:
+      return { text: plain || 'Your ticket was resolved', link: `${FRONTEND}/settings/tickets` };
+    case NotificationType.Message_Received:
+      return {
+        text: plain || `${who} sent you a message`,
+        link: r.conversation_id ? `${FRONTEND}/messages?conversation=${encodeURIComponent(r.conversation_id)}` : `${FRONTEND}/messages`,
+      };
+    case NotificationType.MESSAGE:
+      if (r.project_id) {
+        return { text: plain || 'Collaboration update', link: `${FRONTEND}/p/${r.project_id}` };
+      }
+      return { text: plain || 'You have a new notification', link: `${FRONTEND}/notifications` };
+    default:
+      return { text: plain || 'You have a new notification', link: `${FRONTEND}/notifications` };
+  }
+}
+
 function buildSections(rows: any[]): { html: string; includedIds: Set<string> } {
   const sections: string[] = [];
   const includedIds = new Set<string>();
@@ -56,7 +107,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     for (const r of collab) {
       const text = stripHtml(r.message) || 'New applicant activity';
       const link = `${FRONTEND}/collaborations/${r.project_id}/applicants`;
-      html += `<li style="margin:8px 0;">${text} — <a href="${link}">View applicants</a></li>`;
+      html += `<li style="margin:8px 0;">${text} - <a href="${link}">View applicants</a></li>`;
     }
     html += '</ul>';
     sections.push(html);
@@ -68,7 +119,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     for (const r of shortlisted) {
       const text = stripHtml(r.message) || 'Shortlist update';
       const link = `${FRONTEND}/p/${r.project_id}`;
-      html += `<li style="margin:8px 0;">${text} — <a href="${link}">Open project</a></li>`;
+      html += `<li style="margin:8px 0;">${text} - <a href="${link}">Open project</a></li>`;
     }
     html += '</ul>';
     sections.push(html);
@@ -80,7 +131,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     for (const r of rejected) {
       const text = stripHtml(r.message) || 'Application update';
       const link = `${FRONTEND}/collaborations`;
-      html += `<li style="margin:8px 0;">${text} — <a href="${link}">Browse collaborations</a></li>`;
+      html += `<li style="margin:8px 0;">${text} - <a href="${link}">Browse collaborations</a></li>`;
     }
     html += '</ul>';
     sections.push(html);
@@ -93,7 +144,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
       const text = stripHtml(r.message) || 'New message';
       const conv = r.conversation_id ? `?conversation=${encodeURIComponent(r.conversation_id)}` : '';
       const link = `${FRONTEND}/messages${conv}`;
-      html += `<li style="margin:8px 0;">${text} — <a href="${link}">Open messages</a></li>`;
+      html += `<li style="margin:8px 0;">${text} - <a href="${link}">Open messages</a></li>`;
     }
     html += '</ul>';
     sections.push(html);
@@ -105,7 +156,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     const label = n === 1 ? '1 new connection request' : `${n} new connection requests`;
     const link = `${FRONTEND}/connection/me`;
     sections.push(
-      `<h3 style="color:#333;font-size:16px;">Connections</h3><p style="margin:8px 0;">${label} — <a href="${link}">Review requests</a></p>`,
+      `<h3 style="color:#333;font-size:16px;">Connections</h3><p style="margin:8px 0;">${label} - <a href="${link}">Review requests</a></p>`,
     );
   }
 
@@ -114,7 +165,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     let html = '<h3 style="color:#333;font-size:16px;">Support</h3><ul style="padding-left:18px;">';
     for (const r of tickets) {
       const link = `${FRONTEND}/settings/tickets`;
-      html += `<li style="margin:8px 0;">Your ticket was resolved — <a href="${link}">View tickets</a></li>`;
+      html += `<li style="margin:8px 0;">Your ticket was resolved - <a href="${link}">View tickets</a></li>`;
     }
     html += '</ul>';
     sections.push(html);
@@ -125,8 +176,10 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
     mark(rest);
     let html = '<h3 style="color:#333;font-size:16px;">Updates</h3><ul style="padding-left:18px;">';
     for (const r of rest) {
-      const text = stripHtml(r.message) || 'Notification';
-      html += `<li style="margin:8px 0;">${text}</li>`;
+      const { text, link } = digestLineForRow(r);
+      html += link
+        ? `<li style="margin:8px 0;">${text} - <a href="${link}">View</a></li>`
+        : `<li style="margin:8px 0;">${text}</li>`;
     }
     html += '</ul>';
     sections.push(html);
