@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { connectDatabase, disconnectDatabase } from './lib/db';
 import { registerJob, startAllJobs, stopAllJobs } from './lib/scheduler';
 import { logger } from './lib/logger';
@@ -17,6 +18,12 @@ import { PlatformType } from '@interfaces/platforms.interface';
 async function main() {
   logger.info('=== Blutor Scheduler starting ===');
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(
+    `Telegram alerts: ${process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID ? 'enabled' : 'DISABLED (set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID)'}`,
+  );
+  logger.info(
+    `Gmail (digest): ${process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY_FOR_MAIL ? 'env present' : 'missing GOOGLE_* (digest emails will fail when sending)'}`,
+  );
 
   await connectDatabase();
 

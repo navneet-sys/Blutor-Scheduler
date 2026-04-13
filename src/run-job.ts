@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { connectDatabase, disconnectDatabase } from './lib/db';
 import { acquireLock, releaseLock } from './lib/lock';
 import { sendTelegramMessage } from './lib/telegram';
@@ -10,6 +11,7 @@ import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
 import { runICMDailyReport, runICMDailyReportBackfill } from './jobs/icmDailyReport.job';
+import { runNotificationDigest } from './jobs/notificationDigest.job';
 import { PlatformType } from '@interfaces/platforms.interface';
 
 const JOBS: Record<string, () => Promise<string | void>> = {
@@ -32,6 +34,7 @@ const JOBS: Record<string, () => Promise<string | void>> = {
   },
   'icm-daily-report': () => runICMDailyReport(),
   'icm-daily-report-backfill': () => runICMDailyReportBackfill(),
+  'notification-digest': () => runNotificationDigest(),
 };
 
 async function main() {

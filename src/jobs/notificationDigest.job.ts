@@ -135,7 +135,7 @@ function buildSections(rows: any[]): { html: string; includedIds: Set<string> } 
   return { html: sections.join(''), includedIds };
 }
 
-export async function runNotificationDigest(): Promise<void> {
+export async function runNotificationDigest(): Promise<string> {
   logger.info('notification-digest: job started');
 
   const pending = await notificationModel
@@ -146,8 +146,9 @@ export async function runNotificationDigest(): Promise<void> {
     .lean();
 
   if (!pending.length) {
-    logger.info('notification-digest: no pending notifications');
-    return;
+    const msg = 'no pending notifications (all digested or none queued)';
+    logger.info(`notification-digest: ${msg}`);
+    return msg;
   }
 
   const byAccount = new Map<string, any[]>();
@@ -157,9 +158,14 @@ export async function runNotificationDigest(): Promise<void> {
     byAccount.get(id)!.push(n);
   }
 
-  const emailService = getGoogleEmailService();
   const date = moment.tz(TZ).format('MMM D, YYYY');
   let batch = 0;
+  let emailsSent = 0;
+  let skippedNoEmail = 0;
+  let skippedEmptySections = 0;
+  let failedAccounts = 0;
+
+  let emailService: ReturnType<typeof getGoogleEmailService> | null = null;
 
   for (const [accountId, rows] of byAccount) {
     try {
@@ -169,14 +175,20 @@ export async function runNotificationDigest(): Promise<void> {
 
       const account: any = await accountModel.findById(accountId).lean();
       if (!account?.email || String(account.email).endsWith('@blutor.internal')) {
+        skippedNoEmail++;
         batch++;
         continue;
       }
 
       const { html: sectionsHtml, includedIds } = buildSections(rows);
       if (!sectionsHtml.trim()) {
+        skippedEmptySections++;
         batch++;
         continue;
+      }
+
+      if (!emailService) {
+        emailService = getGoogleEmailService();
       }
 
       await emailService.sendMailWithTemplate(EmailTemplates.NOTIFICATION_DAILY_DIGEST, account.email, {
@@ -188,12 +200,24 @@ export async function runNotificationDigest(): Promise<void> {
       const ids = rows.filter((r: any) => includedIds.has(String(r._id))).map((r: any) => r._id);
       await notificationModel.updateMany({ _id: { $in: ids } }, { $set: { email_sent: true } });
 
+      emailsSent++;
       logger.info(`notification-digest: sent to ${account.email} (${rows.length} items)`);
     } catch (e: any) {
+      failedAccounts++;
       logger.error(`notification-digest: failed for account ${accountId}: ${e?.message || e}`);
     }
     batch++;
   }
 
-  logger.info('notification-digest: job finished');
+  const summary = [
+    `pending_notifs=${pending.length}`,
+    `accounts=${byAccount.size}`,
+    `emails_sent=${emailsSent}`,
+    `skipped_no_email=${skippedNoEmail}`,
+    `skipped_empty_sections=${skippedEmptySections}`,
+    `failed_accounts=${failedAccounts}`,
+  ].join(', ');
+
+  logger.info(`notification-digest: job finished (${summary})`);
+  return summary;
 }
