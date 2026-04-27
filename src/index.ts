@@ -10,6 +10,7 @@ import { runTokenRefresh } from './jobs/tokenRefresh.job';
 import { runPermissionCheck } from './jobs/permissionCheck.job';
 import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
+import { runDailyOverviewSnapshot } from './jobs/dailyOverviewSnapshot.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
 import { runICMDailyReport } from './jobs/icmDailyReport.job';
 import { runNotificationDigest } from './jobs/notificationDigest.job';
@@ -61,6 +62,13 @@ async function main() {
     name: 'dau-calculation',
     schedule: CRON_SCHEDULES.DAU_CALCULATION,
     handler: runDAUCalculation,
+    lockTtlHours: 1,
+  });
+
+  registerJob({
+    name: 'daily-overview-snapshot',
+    schedule: CRON_SCHEDULES.DAILY_OVERVIEW_SNAPSHOT,
+    handler: runDailyOverviewSnapshot,
     lockTtlHours: 1,
   });
 

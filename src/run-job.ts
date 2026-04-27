@@ -9,6 +9,7 @@ import { runTokenRefresh } from './jobs/tokenRefresh.job';
 import { runPermissionCheck } from './jobs/permissionCheck.job';
 import { runDeliverableTracking } from './jobs/deliverableTracking.job';
 import { runDAUCalculation } from './jobs/dauCalculation.job';
+import { runDAUBackfill } from './jobs/dauCalculation.job';
 import { runCreatorDataRefresh } from './jobs/creatorDataRefresh.job';
 import { runICMDailyReport, runICMDailyReportBackfill } from './jobs/icmDailyReport.job';
 import { runNotificationDigest } from './jobs/notificationDigest.job';
@@ -31,6 +32,12 @@ const JOBS: Record<string, () => Promise<string | void>> = {
       results.push(summary);
     }
     return results.join('\n');
+  },
+  'dau-backfill': () => {
+    const dateArg = process.argv[3];
+    if (!dateArg) throw new Error('Usage: run-job dau-backfill YYYY-MM-DD [endDate]');
+    const endArg = process.argv[4] || dateArg;
+    return runDAUBackfill(dateArg, endArg);
   },
   'icm-daily-report': () => runICMDailyReport(),
   'icm-daily-report-backfill': () => runICMDailyReportBackfill(),

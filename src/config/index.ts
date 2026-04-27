@@ -37,6 +37,7 @@ export const CRON_SCHEDULES = {
   PERMISSION_CHECK: '0 5 * * *',             // 5 AM IST
   DELIVERABLE_TRACKING: '0 */6 * * *',       // every 6 hours
   DAU_CALCULATION: '0 0 * * *',              // midnight IST
+  DAILY_OVERVIEW_SNAPSHOT: '15 0 * * *',     // 00:15 IST (after DAU)
   ICM_DAILY_REPORT: '0 9 * * *',             // 9 AM IST daily
   NOTIFICATION_DIGEST: '0 10 * * *',         // 10 AM IST daily
 } as const;
