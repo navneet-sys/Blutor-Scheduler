@@ -16,8 +16,8 @@ export const {
 } = process.env;
 
 export const SCHEDULER_CONFIG = {
-  BATCH_SIZE: 5,
-  BATCH_DELAY_MS: 2000,
+  BATCH_SIZE: 30,
+  BATCH_DELAY_MS: 200,
   LOCK_TTL_HOURS: 4,
   STALE_THRESHOLD_HOURS: 24,
   TIMEZONE: 'Asia/Kolkata',
